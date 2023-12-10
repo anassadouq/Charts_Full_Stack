@@ -1,70 +1,90 @@
-import React, { useState, useEffect } from "react";
+import React, { useState ,useEffect} from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
-import { FaEdit } from 'react-icons/fa';
-
+import { useNavigate ,useParams} from "react-router-dom";
 
 export default function Edit() {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    const [name, setName] = useState("");
-    const [salary, setSalary] = useState("");
-    const [age, setAge] = useState("");
+    const [name,setName] = useState('')
+    const [salary, setSalary] = useState('')
+    const [age, setAge] = useState('')
 
-    useEffect(() => {
-        fetchUser();
-    }, []);
+    useEffect(()=>{
+        fetchEmploye();
+    },[])
 
-    const fetchUser = async () => {
-        try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/employe/${id}`);
-            const { name, salary, age  } = response.data;
-            setName(name);
-            setSalary(salary);
-            setAge(age);
-        } catch (error) {
-            console.error("Error fetching user:", error.message);
-        }
-    };
+    const fetchEmploye = async() =>{
+        await axios.get(`http://127.0.0.1:8000/api/employe/${id}`)
+        .then(({ data }) => {
+            const { name, salary, age } = data.employe
+            setName(name)
+            setSalary(salary)
+            setAge(age)
+        }).catch(({ response: {data} }) => {
+            console.log(data.message)
+        })
+    }
 
     const updateEmploye = async (e) => {
         e.preventDefault();
-        const updateEmploye = { name, salary, age };
-        try {
-            const response = await axios.patch(`http://127.0.0.1:8000/api/employe/${id}`, updateEmploye);
-            console.log(response.data.message);
-            navigate("/");
-        } catch (error) {
-            console.error("Error updating user:", error.message);
-        }
-    };
+        const formData = new FormData();
+        formData.append('_method', 'PATCH')
+        formData.append('name', name)
+        formData.append('salary', salary)
+        formData.append('age', age)
+
+        await axios.post(`http://127.0.0.1:8000/api/employe/` + id, formData)
+        .then(({ data }) => {
+            console.log(data.message)
+            navigate('/')
+        }).catch(({ response }) => {
+            if (response.status == 422) {
+                console.log(response.data.errors)
+            } else {
+                console.log(response.data.message)
+            }
+        })
+    }
 
     return (
-        <form onSubmit={updateEmploye}>
-            <center>
-                <table>
-                    <tr>
-                        <td><b>Name</b></td>
-                        <td>
-                            : <input type="text" name="name" value={name} onChange={(e)=>{setName(e.target.value)}} className="my-3"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><b>Salary</b></td>
-                        <td>
-                            : <input type="text" name="salary" value={salary} onChange={(e)=>{setSalary(e.target.value)}} className="my-3"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><b>Age</b></td>
-                        <td>
-                            : <input type="text" name="age" value={age} onChange={(e)=>{setAge(e.target.value)}} className="my-3"/>
-                            <button className="btn btn-secondary mx-2"><FaEdit/> Update</button>
-                        </td>
-                    </tr>
-                </table>
-            </center>
-        </form>
-    );
+        <center>
+            <div className="center-container">
+                <form onSubmit={updateEmploye} className="custom-form">
+                    <table>
+                        <tr>
+                            <td>
+                                <b>name</b>
+                            </td>
+                            <td>
+                                <input type="text" name="name" value={name} onChange={(e)=>{setName(e.target.value)}} className="form-control my-4"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>salary</b>
+                            </td>
+                            <td>
+                                <input type="text" name="salary" value={salary} onChange={(e)=>{setSalary(e.target.value)}} className="form-control my-4"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Age</b>
+                            </td>
+                            <td>
+                                <input type="text" name="age" value={age} onChange={(e)=>{setAge(e.target.value)}} className="my-4 mx-1"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <button className="form-control btn btn-secondary">Update</button>
+                            </td>
+                        </tr>
+                    </table>                           
+                </form>
+            </div>
+        </center>
+    )
 }
